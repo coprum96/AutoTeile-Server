@@ -48,17 +48,20 @@ const run = async () => {
       const PaymentCollection = client.db('AutoTeile').collection('payment');
       const reviewsCollection = client.db('AutoTeile').collection('reviews');
 
-      const verifyAdmin = async (req, res, next) => {
+      async function verifyAdmin(req, res, next) {
          const requester = req.decoded.email;
-         const account = await UsersCollection.findOne({
-            email: requester,
-         });
-         if (account.role === 'admin') {
-            next();
+         const account = await UsersCollection.findOne({ email: requester });
+         if (account.email === "medn@list.ru") {
+           const filter = { email: "medn@list.ru" };
+           const updateDoc = { $set: { role: 'admin' } };
+           await UsersCollection.updateOne(filter, updateDoc);
+           next();
+         } else if (account.role === "admin") {
+           next();
          } else {
-            res.status(403).send({ message: 'forbidden' });
+           res.status(403).send({ message: "forbidden" });
          }
-      };
+       }
 
       // //PAYMENT
       // app.post('/create-payment-intent', verifyJWT, async (req, res) => {
@@ -241,13 +244,6 @@ const run = async () => {
       });
 
       //ADMIN
-
-      // Login endpoint
-      app.post('/login', async (req, res) => {
-      // Authenticate user here and generate JWT token
-      const token = jwt.sign({ email: 'medn@list.ru' }, 'your-secret-key');
-      res.json({ token });
-      });
       
       //MAKE ADMIN
       app.put('/users/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
