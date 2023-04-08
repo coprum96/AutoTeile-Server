@@ -95,7 +95,7 @@ const run = async () => {
       app.delete('/parts/:id', verifyJWT, verifyAdmin, async (req, res) => {
          const id = req.params.id;
          const deleted = await PartsCollection.deleteOne({
-            _id: ObjectId(id),
+            _id: new ObjectId(id),
          });
          res.send(deleted);
          console.log(deleted);
@@ -162,7 +162,7 @@ const run = async () => {
       app.delete('/orders/:id', verifyJWT, async (req, res) => {
          const id = req.params.id;
          const deleted = await OrdersCollection.deleteOne({
-            _id: ObjectId(id),
+            _id: new ObjectId(id),
          });
          res.send(deleted);
       });
