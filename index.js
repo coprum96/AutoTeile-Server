@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 //PORT
 const port = process.env.PORT || 5000;
@@ -11,18 +11,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 //  jwt verification
+
 function verifyJWT(req, res, next) {
    const authHeader = req.headers.authorization;
-   if (!authHeader) {
-      return res.status(401).send({ message: 'unauthorized access' });
+   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).send({ message: 'Unauthorized access' });
    }
    const token = authHeader.split(' ')[1];
    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
       if (err) {
-         return res.status(403).send({ message: 'can not go further!!😕 forbidden access' });
+         if (err.name === 'TokenExpiredError') {
+            return res.status(403).send({ message: 'Token has expired' });
+         }
+         return res.status(403).send({ message: 'Forbidden access' });
       }
-
       req.decoded = decoded;
       next();
    });
@@ -48,28 +52,30 @@ const run = async () => {
 
       const verifyAdmin = async (req, res, next) => {
          const requester = req.decoded.email;
-         const account = await UsersCollection.findOne({
-            email: requester,
-         });
-         if (account.role === 'admin') {
-            next();
-         } else {
-            res.status(403).send({ message: 'forbidden' });
+         const user = await UsersCollection.findOne({ email: requester });
+         if (!user) {
+           return res.status(403).send({ message: 'User not found' });
          }
-      };
+         const isAdmin = user.role === 'admin';
+         if (isAdmin) {
+           next();
+         } else {
+           res.status(403).send({ message: 'Forbidden' });
+         }
+       };
 
-      //PAYMENT
-      app.post('/create-payment-intent', verifyJWT, async (req, res) => {
-         const { total } = req.body;
-         const amount = total * 100;
+      // //PAYMENT
+      // app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+      //    const { total } = req.body;
+      //    const amount = total * 100;
 
-         const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: 'usd',
-            payment_method_types: ['card'],
-         });
-         res.send({ clientSecret: paymentIntent.client_secret });
-      });
+      //    const paymentIntent = await stripe.paymentIntents.create({
+      //       amount: amount,
+      //       currency: 'usd',
+      //       payment_method_types: ['card'],
+      //    });
+      //    res.send({ clientSecret: paymentIntent.client_secret });
+      // });
 
       //ROUTES
 
@@ -253,10 +259,18 @@ const run = async () => {
 
       //GET ADMIN
       app.get('/admin/:email', async (req, res) => {
-         const email = req.params.email;
-         const user = await UsersCollection.findOne({ email: email });
-         const isAdmin = user.role === 'admin';
-         res.send({ admin: isAdmin });
+         try {
+            const email = req.params.email;
+            const user = await UsersCollection.findOne({ email: email });
+            if (!user) {
+               return res.status(404).send({ message: 'User not found' });
+            }
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
+         } catch (error) {
+            console.log(error);
+            res.status(500).send({ message: 'Server error' });
+         }
       });
    } catch (error) {
       console.log(error);
