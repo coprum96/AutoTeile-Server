@@ -81,9 +81,11 @@ const run = async () => {
 
       //GET ALL PARTS
       app.get('/parts', async (req, res) => {
-         const parts = await PartsCollection.find({}).toArray();
+         const searchTerm = req.query.search || '';
+         const searchRegex = new RegExp(searchTerm, 'i');
+         const parts = await PartsCollection.find({ name: searchRegex }).toArray();
          res.send(parts);
-      });
+       });
 
       //ADD NEW PARTS
       app.post('/parts', verifyJWT, verifyAdmin, async (req, res) => {
