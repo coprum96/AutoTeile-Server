@@ -197,20 +197,7 @@ const run = async () => {
       //?USER CAN NOT ORDER SAME PRODUCT TWICE
       app.post('/orders', verifyJWT, async (req, res) => {
          const order = req.body;
-         const query = {
-            productId: order.productId,
-            email: order.email,
-         };
-         const exist = await OrdersCollection.findOne(query);
-
-         if (exist?.productId === order?.productId && exist?.email === order?.email) {
-            return res.send({
-               success: false,
-               message: 'Order already exist',
-            });
-         }
          const result = await OrdersCollection.insertOne(order);
-
          return res.send({ success: true, result });
       });
 
