@@ -83,7 +83,15 @@ const run = async () => {
       app.get('/parts', async (req, res) => {
          const searchTerm = req.query.search || '';
          const searchRegex = new RegExp(searchTerm, 'i');
-         const parts = await PartsCollection.find({ name: searchRegex }).toArray();
+         const page = parseInt(req.query.page) || 1;
+         const limit = parseInt(req.query.limit) || 1000000;
+         const skip = (page - 1) * limit;
+       
+         const parts = await PartsCollection.find({ name: searchRegex })
+           .skip(skip)
+           .limit(limit)
+           .toArray();
+       
          res.send(parts);
        });
 
