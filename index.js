@@ -79,21 +79,14 @@ const run = async () => {
 
       //ROUTES
 
-      //GET ALL PARTS
-      app.get('/parts', async (req, res) => {
-         const searchTerm = req.query.search || '';
-         const searchRegex = new RegExp(searchTerm, 'i');
-         const page = parseInt(req.query.page) || 1;
-         const limit = parseInt(req.query.limit) || 1000000;
-         const skip = (page - 1) * limit;
-       
-         const parts = await PartsCollection.find({ name: searchRegex })
-           .skip(skip)
-           .limit(limit)
-           .toArray();
-       
-         res.send(parts);
-       });
+   //GET ALL PARTS
+   app.get('/parts', async (req, res) => {
+      const searchTerm = req.query.search || '';
+      const searchRegex = new RegExp(searchTerm, 'i');
+      const parts = await PartsCollection.find({ name: searchRegex }).toArray();
+      res.send(parts);
+    });
+ 
 
       //ADD NEW PARTS
       app.post('/parts', verifyJWT, verifyAdmin, async (req, res) => {
