@@ -45,6 +45,7 @@ const run = async () => {
       await client.connect();
       console.log('MongoDB is connected');
       const PartsCollection = client.db('AutoTeile').collection('parts');
+      await PartsCollection.createIndex({ name: 1 });
       const UsersCollection = client.db('AutoTeile').collection('users');
       const OrdersCollection = client.db('AutoTeile').collection('orders');
       const PaymentCollection = client.db('AutoTeile').collection('payment');
