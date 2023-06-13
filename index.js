@@ -45,7 +45,6 @@ const run = async () => {
       await client.connect();
       console.log('MongoDB is connected');
       const PartsCollection = client.db('AutoTeile').collection('parts');
-      await PartsCollection.createIndex({ name: 1 });
       const UsersCollection = client.db('AutoTeile').collection('users');
       const OrdersCollection = client.db('AutoTeile').collection('orders');
       const PaymentCollection = client.db('AutoTeile').collection('payment');
@@ -80,14 +79,13 @@ const run = async () => {
 
       //ROUTES
 
-   //GET ALL PARTS
-   app.get('/parts', async (req, res) => {
-      const searchTerm = req.query.search || '';
-      const searchRegex = new RegExp(searchTerm, 'i');
-      const parts = await PartsCollection.find({ name: searchRegex }).toArray();
-      res.send(parts);
-    });
- 
+      //GET ALL PARTS
+      app.get('/parts', async (req, res) => {
+         const searchTerm = req.query.search || '';
+         const searchRegex = new RegExp(searchTerm, 'i');
+         const parts = await PartsCollection.find({ name: searchRegex }).toArray();
+         res.send(parts);
+       });
 
       //ADD NEW PARTS
       app.post('/parts', verifyJWT, verifyAdmin, async (req, res) => {
@@ -199,7 +197,20 @@ const run = async () => {
       //?USER CAN NOT ORDER SAME PRODUCT TWICE
       app.post('/orders', verifyJWT, async (req, res) => {
          const order = req.body;
+         const query = {
+            productId: order.productId,
+            email: order.email,
+         };
+         const exist = await OrdersCollection.findOne(query);
+
+         if (exist?.productId === order?.productId && exist?.email === order?.email) {
+            return res.send({
+               success: false,
+               message: 'Order already exist',
+            });
+         }
          const result = await OrdersCollection.insertOne(order);
+
          return res.send({ success: true, result });
       });
 
