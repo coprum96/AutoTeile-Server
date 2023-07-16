@@ -17,6 +17,8 @@
     "jsonwebtoken": "^9.0.0",
     "mongodb": "^5.1.0",
     "mongoose": "^7.0.3",
+    "node-cache": "^5.1.2",
+    "node-cron": "^3.0.2",
     "nodemon": "^2.0.22",
     "stripe": "^11.16.0",
     "uuid": "^9.0.0"
